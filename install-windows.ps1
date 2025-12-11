@@ -3,7 +3,7 @@ Installs Subtis CLI on Windows by downloading the release zip, extracting subtis
 copying it to %LOCALAPPDATA%\Programs\Subtis (default), and updating PATH for the current user.
 
 Usage (one-liner example):
-  powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/lndgalante/windows-subtis-cli/main/scripts/install-windows.ps1 | iex"
+  powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/lndgalante/windows-subtis-cli/main/install-windows.ps1 | iex"
 
 Flags:
   -Version <X.Y.Z>     Install a specific release tag (vX.Y.Z). Defaults to latest if omitted.
@@ -99,13 +99,19 @@ try {
       [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
       $pathUpdated = $true
     }
+
+    # Refresh current session PATH so subtis works immediately
+    $processParts = $env:Path -split ";" | Where-Object { $_ }
+    if ($processParts -notcontains $TargetDir) {
+      $env:Path = ($processParts + $TargetDir) -join ";"
+    }
   }
 
   Write-Info "Installed to $TargetDir"
   if ($pathUpdated) {
-    Write-Info "PATH updated for current user. Open a new terminal to pick it up."
+    Write-Info "PATH updated for current user. Current session PATH refreshed; open a new terminal if you still see PATH issues."
   } elseif (-not $NoPathUpdate) {
-    Write-Info "PATH already contained $TargetDir"
+    Write-Info "PATH already contained $TargetDir; current session PATH refreshed."
   } else {
     Write-Info "PATH update skipped (NoPathUpdate set)."
   }
